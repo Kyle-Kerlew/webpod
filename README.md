@@ -1,4 +1,4 @@
-# ipod
+# webpod
 
 ## Project setup
 ```
