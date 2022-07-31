@@ -30,7 +30,7 @@ export const SCREENS = {
         name: "ALBUMS",
         isFullscreen: true,
         isSongSelection: false,
-        options: Object.values(SONG_DATA)
+        options: []
     },
     SHUFFLE: {
         name: "SHUFFLE",

@@ -1,10 +1,12 @@
 <template>
-  <div class="row-container">
+  <div v-if="this.currentSong" class="row-container">
     <p>{{ this.convertToFormattedString(this.currentTimeInSeconds) }}</p>
     <div class="progress-container">
       <div ref="progressBar" class="progress-bar"/>
     </div>
-    <p>{{ this.convertToFormattedString(this.currentSong.length - this.currentTimeInSeconds) }}</p>
+    <p>{{
+        this.convertToFormattedString(this.lengthInSeconds(this.currentSong.duration_ms) - this.currentTimeInSeconds)
+      }}</p>
 
   </div>
 </template>
@@ -12,7 +14,7 @@
 <script>
 import {mapState} from "pinia/dist/pinia.mjs";
 import {usePlayerStore} from "@/store";
-import {PLAYER_STATE} from "@/constants/PlayerState";
+import {PlayerState} from "@/constants/PlayerState";
 import {mapActions} from "pinia/dist/pinia";
 
 export default {
@@ -22,34 +24,41 @@ export default {
       currentTimeInSeconds: 0
     }
   },
+  props: {
+    currentSong: Object
+  },
   computed: {
-    ...mapState(usePlayerStore, ['currentSong', 'playerState'])
+    ...mapState(usePlayerStore, ['playerState'])
   },
   mounted() {
     this.play();
   },
   methods: {
     ...mapActions(usePlayerStore, ['setPlaying']),
-    convertToFormattedString(totalSeconds) {
+    lengthInSeconds(timeInMilliseconds) {
+      return Math.round(timeInMilliseconds * 0.001);
+    },
+    convertToFormattedString(totalSecondsFrac) {
+      const totalSeconds = Math.round(totalSecondsFrac)
       const minutesFractional = totalSeconds / 60; //this can be fractional. Check for potential issues
       const minutesAsString = minutesFractional.toString();
       const minutesWholeNumber = Math.floor(minutesFractional);
 
       let seconds = Math.round(parseFloat(minutesAsString.substring(minutesAsString.indexOf('.'), minutesAsString.length)) * 60);
-      if (seconds === 60) {
+      if (seconds > 59) {
         seconds = 0;
       }
       const secondsWithPrefixedZero = seconds < 10 && "0" + seconds;
       return `${minutesWholeNumber}:${secondsWithPrefixedZero || seconds}`;
     },
     updateProgressBar() {
-      this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds * 100) + "%"
+      this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds(this.currentSong.duration_ms) * 100) + "%"
     },
     play() {
-      if (this.playerState === PLAYER_STATE.PAUSED) {
+      if (this.playerState === PlayerState.PAUSED) {
         return;
       }
-      if (this.currentTimeInSeconds === this.lengthInSeconds) {
+      if (this.currentTimeInSeconds === this.lengthInSeconds(this.currentSong.duration_ms)) {
         this.$emit('end-song');
         return;
       }
@@ -62,7 +71,7 @@ export default {
   },
   watch: {
     playerState(playerState) {
-      if (playerState === PLAYER_STATE.PLAYING) {
+      if (playerState === PlayerState.PLAYING) {
         this.play();
       }
     },

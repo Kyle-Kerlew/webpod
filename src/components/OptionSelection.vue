@@ -1,12 +1,13 @@
 <template>
   <div class="row">
-    <ul class="options" id="options">
-      <li v-for="item in this.currentItems"
-          :class="{selected: item===this.currentlySelected, 'no-select':item===!this.currentlySelected}" :key="item">
-        <slot class="scroll-container" :hideArtist="this.hideArtist" :item="item">
+    <ul ref="options" class="options" id="options">
+      <li :id="item.id" v-for="item in this.currentItems"
+          :class="{selected: item===this.currentlySelected, 'no-select':item===!this.currentlySelected}" :key="item.id">
+        <slot v-if="typeof this.currentItems[0] !== 'string'" class="scroll-container" :hideArtist="this.hideArtist"
+              :item="item">
 
         </slot>
-        <div v-if="!custom">
+        <div v-else>
           {{ item }}
         </div>
       </li>
@@ -22,52 +23,54 @@ export default {
 
   name: 'OptionSelection',
   props: {
-    custom: Boolean,
-    items: Object,
     screen: Object,
     hideArtist: Boolean,
     selectedOption: [String, Object],
-    goingBack: Boolean,
   },
-
   data() {
     return {
-      oldItems: undefined,
-      nextItems: undefined,
-      prevItems: undefined,
+      counter: 0,
     }
-  },
-  methods: {
-    //remove duplicates of
-    removeDuplicates(array, removeDuplicateAlbums = false, removeDuplicateArtists = false) {
-      const resultArray = {};
-      if (removeDuplicateAlbums) {
-        return array.filter(obj => !resultArray[obj.album] && (resultArray[obj.album] = true));
-      }
-      if (removeDuplicateArtists) {
-        return array.filter(obj => !resultArray[obj.artist] && (resultArray[obj.artist] = true));
-      }
-      return this.currentItems;
-    },
   },
   computed: {
     currentlySelected() {
-      if (this.custom) {
-        return this.currentItems.filter(items => items.id === this.selectedOption.id)[0];
-      }
       return this.currentItems[this.currentItems.indexOf(this.selectedOption)];
     },
     currentItems() {
-      if (!this.items) {
-        return [];
-      }
-
-      if (this.screen?.name === SCREENS.ARTISTS?.name || this.screen?.name === SCREENS.ALBUMS.name) {
-        return this.removeDuplicates([...Object.values(this.items)], this.screen.name === SCREENS.ARTISTS.name, this.screen.name === SCREENS.ALBUMS.name);
-      }
-      return Object.values(this.items);
+      // if (this.screen?.name === SCREENS.ARTISTS?.name || this.screen?.name === SCREENS.ALBUMS.name) {
+      //   return this.removeDuplicates([...Object.values(this.screen.options)], this.screen.name === SCREENS.ARTISTS.name, this.screen.name === SCREENS.ALBUMS.name);
+      // }
+      return Object.values(this.screen.options);
     }
   },
+  watch: {
+    currentItems(curr, prev) {
+      if (prev) {
+        this.$refs.options.width = ""
+      }
+    },
+    currentlySelected: {
+      handler(curr) {
+        if (this.screen.name !== SCREENS.ARTISTS.name) {
+          return;
+        }
+        this.counter++;
+        console.log(this.counter)
+        const element = document.getElementById(curr.id);
+        const elementBounds = element.getBoundingClientRect()
+        const bounds = this.$refs.options.getBoundingClientRect();
+        const height = element.clientHeight;
+        if (bounds.height - 20 < elementBounds.y - 20) {
+        console.log("height to scroll", height)
+          this.$refs.options.scrollBy({top: height, behavior: 'instant'})
+        } else if (bounds.top - 20 > elementBounds.y - 20) {
+        console.log("height to scroll", height)
+          this.$refs.options.scrollBy({top: -height, behavior: 'instant'})
+        }
+      },
+      flush: 'post'
+    }
+  }
 }
 </script>
 
@@ -75,6 +78,7 @@ export default {
 .options {
   list-style-type: none;
   min-width: 100%;
+  height: 100%;
   padding: unset;
   margin: unset;
   overflow-y: auto;
@@ -94,6 +98,11 @@ export default {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
+}
+
+.row {
+  /*100% height minus the text banner*/
+  height: calc(100% - 21px);
 }
 
 .scroll-container {

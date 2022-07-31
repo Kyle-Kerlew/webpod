@@ -1,16 +1,36 @@
 import {defineStore} from "pinia";
-import {PLAYER_STATE} from "@/constants/PlayerState";
+import {PlayerState} from "@/constants/PlayerState";
+import {Mode} from "@/constants/PlayerMode";
 
 export const usePlayerStore = defineStore('main', {
     state: () => {
         return {
-            playerState: PLAYER_STATE.PAUSED,
+            playerState: PlayerState.PAUSED,
             songQueue: [],
+            player: undefined,
             currentSongIndex: 0,
-            currentSong: {},
+            currentSongId: undefined,
+            deviceId: undefined,
+            mode: undefined,
+            token: undefined
         }
     },
     actions: {
+        setPlayer(player) {
+            this.player = player;
+        },
+        setDeviceId(deviceId) {
+            this.deviceId = deviceId
+        },
+        setToken(token) {
+          this.token = token;
+        },
+        setToDemoMode() {
+            this.mode = Mode.DEMO;
+        },
+        setToSpotifyMode() {
+            this.mode = Mode.SPOTIFY;
+        },
         addToQueue(array) {
             this.songQueue.push(...array);
         },
@@ -25,13 +45,13 @@ export const usePlayerStore = defineStore('main', {
             this.skipSong();
         },
         setPlaying() {
-            this.playerState = PLAYER_STATE.PLAYING;
+            this.playerState = PlayerState.PLAYING;
         },
-        setCurrentSong(song) {
-            this.currentSong = song;
+        setCurrentSongId(songId) {
+            this.currentSongId = songId;
         },
         setPaused() {
-            this.playerState = PLAYER_STATE.PAUSED;
+            this.playerState = PlayerState.PAUSED;
         },
         previousSong() {
             if (this.currentSongIndex === 0) {
