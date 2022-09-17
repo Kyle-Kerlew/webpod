@@ -1,12 +1,13 @@
 <template>
-  <div v-if="this.currentImage" class="wrapper">
-    <ul class="items">
-      <li v-for='item in this.options' :key="item" class='item' :class="{active: item === this.currentImage}">
-        <slot v-if="this.type === 'img'" :item="item" :type="this.type"></slot>
-      </li>
-      <slot v-if="this.type === 'custom'" :type="this.type"></slot>
-
-    </ul>
+  <div class="wrapper">
+    <div v-if="this.currentImage">
+      <ul class="items">
+        <li v-for='item in this.options' :key="item" class='item' :class="{active: item === this.currentImage}">
+          <slot :item="item" :type="this.type"></slot>
+        </li>
+      </ul>
+    </div>
+    <slot v-else-if="this.type === 'custom'" :type="this.type"></slot>
   </div>
 </template>
 <script>
@@ -18,17 +19,16 @@ export default {
   },
   data() {
     return {
-      currentImage: this.options[0],
+      currentImage: this.options?.[0],
     }
   },
   methods: {
-    runPanAnimation(previousImageUrlSelected = this.options[0]) {
-      this.currentImage = this.getCurrentImage(previousImageUrlSelected);
-      setTimeout(() => {
+    runPanAnimation() {
+      setInterval(() => {
         if (!this.options || this.options.length === 1) {
           return;
         }
-        this.runPanAnimation(this.currentImage);
+        this.currentImage = this.getCurrentImage(this.currentImage || this.options?.[0]);
       }, 6000)
     },
 
@@ -37,7 +37,7 @@ export default {
         return;
       }
       if (this.options.length === 1) {
-        return this.options[0];
+        return this.options?.[0];
       }
       const num = this.getRandomNumber(previousImageUrlSelected);
       return this.options[num];
@@ -60,7 +60,7 @@ export default {
   watch: {
     options(curr, prev) {
       if (!this.arraysEqual(curr, prev)) {
-        this.currentImage = curr[0]
+        this.currentImage = curr?.[0]
       }
     }
   }

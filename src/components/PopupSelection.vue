@@ -22,8 +22,6 @@ export default {
       token: undefined
     }
   },
-  mounted() {
-  },
   methods: {
     ...mapActions(usePlayerStore, ['setToDemoMode', 'setToSpotifyMode', "setToken"]),
     handleSpotifySelection() {
@@ -34,6 +32,7 @@ export default {
                user-read-private \
                user-library-read \
                user-follow-read \
+               user-read-playback-state \
                user-read-currently-playing"
 
       const state = this.generateRandomString(16);

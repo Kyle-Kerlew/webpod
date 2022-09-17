@@ -21,7 +21,8 @@ export default {
   name: "SongProgress",
   data() {
     return {
-      currentTimeInSeconds: 0
+      currentTimeInSeconds: 0,
+      intervalId: undefined,
     }
   },
   props: {
@@ -33,14 +34,17 @@ export default {
   mounted() {
     this.play();
   },
+  unmounted() {
+    clearInterval(this.intervalId);
+  },
   methods: {
-    ...mapActions(usePlayerStore, ['setPlaying']),
+    ...mapActions(usePlayerStore, ['setPlaying', 'skipSong']),
     lengthInSeconds(timeInMilliseconds) {
       return Math.round(timeInMilliseconds * 0.001);
     },
     convertToFormattedString(totalSecondsFrac) {
       const totalSeconds = Math.round(totalSecondsFrac)
-      const minutesFractional = totalSeconds / 60; //this can be fractional. Check for potential issues
+      const minutesFractional = totalSeconds / 60;
       const minutesAsString = minutesFractional.toString();
       const minutesWholeNumber = Math.floor(minutesFractional);
 
@@ -55,18 +59,22 @@ export default {
       this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds(this.currentSong.duration_ms) * 100) + "%"
     },
     play() {
-      if (this.playerState === PlayerState.PAUSED) {
-        return;
-      }
-      if (this.currentTimeInSeconds === this.lengthInSeconds(this.currentSong.duration_ms)) {
-        this.$emit('end-song');
-        return;
-      }
-      setTimeout(() => {
+
+      this.intervalId = setInterval(() => {
+        if (this.currentTimeInSeconds === this.lengthInSeconds(this.currentSong.duration_ms)) {
+          clearInterval(this.intervalId);
+          this.currentTimeInSeconds = 0;
+          this.$emit('end-song');
+          return;
+        }
+        if (this.playerState === PlayerState.PAUSED) {
+          clearInterval(this.intervalId);
+          return;
+        }
+
         this.currentTimeInSeconds++;
-        this.play();
         this.updateProgressBar();
-      }, 1000)
+      }, 1000);
     }
   },
   watch: {
@@ -77,6 +85,8 @@ export default {
     },
     currentSong() {
       this.currentTimeInSeconds = 0;
+      clearInterval(this.intervalId);
+      this.play();
     }
   }
 }

@@ -10,58 +10,81 @@ export const transferPlayBack = async (deviceId, token) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': "application/json"
     }
-    return fetch("https://api.spotify.com/v1/me/player", {method: "PUT", body: JSON.stringify(request), headers: authHeader})
+    return fetch("https://api.spotify.com/v1/me/player", {
+        method: "PUT",
+        body: JSON.stringify(request),
+        headers: authHeader
+    });
 }
 export const getAlbums = async (token, limit = 50) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
-    return (await fetch("https://api.spotify.com/v1/me/albums", {method: "GET", headers: authHeader})).json()
+    return (await fetch("https://api.spotify.com/v1/me/albums", {method: "GET", headers: authHeader})).json();
 }
 export const getFollowedArtists = async (token, limit = 50) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
-    return (await fetch("https://api.spotify.com/v1/me/following?type=artist", {method: "GET", headers: authHeader})).json()
+    return (await fetch("https://api.spotify.com/v1/me/following?type=artist", {
+        method: "GET",
+        headers: authHeader
+    })).json();
 }
 
 export const getTracksForAlbum = async (token, albumId) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
-    return (await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks`, {method: "GET", headers: authHeader})).json()
+    return (await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks`, {
+        method: "GET",
+        headers: authHeader
+    })).json();
 }
 
 export const getTopTracksForArtist = async (token, artistId) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
-    return (await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {method: "GET", headers: authHeader})).json()
+    return (await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
+        method: "GET",
+        headers: authHeader
+    })).json();
 }
 export const getSong = async (token, songId) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
-    return (await fetch(`https://api.spotify.com/v1/tracks/${songId}`, {method: "GET", headers: authHeader})).json()
+    return (await fetch(`https://api.spotify.com/v1/tracks/${songId}`, {method: "GET", headers: authHeader})).json();
 }
-export const playSong = async (deviceId, token, songId) => {
+export const playSong = (deviceId, token, songId) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
     const body = JSON.stringify({
         uris: [`spotify:track:${songId}`]
     });
-    return (await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {method: "PUT", body: body, headers: authHeader})).json()
+    return fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: "PUT",
+        body: body,
+        headers: authHeader
+    });
 }
-export const queueAndPlay = async (deviceId, token, uri, trackOffset) => {
+export const queueAndPlay = (deviceId, token, uri, trackOffset) => {
     const authHeader = {
         'Authorization': `Bearer ${token}`,
     }
-    const body = JSON.stringify({
-        context_uri: uri,
-        offset: trackOffset && {
+    const body = {
+        context_uri: uri
+    };
+    if (trackOffset) {
+        body.offset = {
             position: trackOffset
         }
+    }
+    return fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+        headers: authHeader
     });
-    return (await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {method: "PUT", body: body, headers: authHeader})).json()
 }

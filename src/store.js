@@ -34,15 +34,13 @@ export const usePlayerStore = defineStore('main', {
         addToQueue(array) {
             this.songQueue.push(...array);
         },
-        skipSong() {
-            if (this.currentSongIndex === this.songQueue.length - 1) {
-                return;
-            }
-            this.currentSong = this.songQueue[this.currentSongIndex + 1];
-            this.currentSongIndex++;
+        clearQueue() {
+            this.songQueue = [];
         },
-        nextSong() {
-            this.skipSong();
+        skipSong() {
+            this.player.nextTrack().then(res => {
+                this.setCurrentSongId(res.id);
+            })
         },
         setPlaying() {
             this.playerState = PlayerState.PLAYING;
@@ -57,7 +55,7 @@ export const usePlayerStore = defineStore('main', {
             if (this.currentSongIndex === 0) {
                 return;
             }
-            this.currentSong = this.songQueue[this.currentSongIndex - 1];
+            this.currentSongId = this.songQueue[this.currentSongIndex - 1];
             this.currentSongIndex--;
         }
     }

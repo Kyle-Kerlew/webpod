@@ -1,8 +1,11 @@
 <template>
   <div class="controls">
-    <div class="outer-ring" @mousedown="this.handleClickOuterRing($event)" @mouseup="this.handleMouseup"
+    <div class="outer-ring"
+         @mousedown="this.handleClickOuterRing($event)"
+         @mouseup="this.handleMouseup"
          @mouseleave="this.handleMouseup"
-         @mousemove="this.handleMoveOuterRing($event)">
+         @mousemove="this.handleMoveOuterRing($event)"
+    >
       <div class="grid">
         <button class="button menu" @click="this.goBack">
           MENU
@@ -14,7 +17,7 @@
         <button class="button next" @click="this.handleNextSong">
           <img src="../assets/svg/next.svg" alt="Next Track" draggable="false"/>
         </button>
-        <button class="button pause-play">
+        <button class="button pause-play" @click="this.handlePausePlay">
           <img src="../assets/svg/pause.svg" alt="Pause/Play Track" draggable="false"/>
         </button>
       </div>
@@ -28,8 +31,13 @@ import {PlayerState} from "@/constants/PlayerState";
 import {MAIN_OPTIONS, MUSIC_OPTIONS, SETTING_OPTIONS} from "@/data/Options";
 import {SONG_DATA} from "@/data/PlayerData";
 import {Mode} from "@/constants/PlayerMode";
-import {getAlbums, getFollowedArtists, getTopTracksForArtist, getTracksForAlbum} from "@/service/PlayerService";
-import {mapActions} from "pinia";
+import {
+  getAlbums,
+  getFollowedArtists,
+  getTopTracksForArtist,
+  getTracksForAlbum
+} from "@/service/PlayerService";
+import {mapActions, mapState} from "pinia";
 import {usePlayerStore} from "@/store";
 
 export default {
@@ -43,17 +51,18 @@ export default {
     return {
       mouseDown: false,
       step: 0,
-      player: undefined,
-      current_track: undefined,
     }
   },
+  computed: {
+    ...mapState(usePlayerStore, ['deviceId', 'songQueue', 'player', 'playerState'])
+  },
   methods: {
-    ...mapActions(usePlayerStore, ['addToQueue', 'skipSong', 'nextSong', 'previousSong', 'setPlaying', 'setCurrentSongId', 'setPaused', 'setPlayer', 'setToken', 'setToSpotifyMode', 'setDeviceId']),
+    ...mapActions(usePlayerStore, ['skipSong', 'clearQueue', 'addToQueue', 'previousSong', 'setPlaying', 'setPaused', 'setCurrentSongId']),
     goBack() {
-      if (!this.stack || this.stack.length === 1 && this.stack[0] === SCREENS.HOME) {
+      if (!this.stack || this.stack.length === 1 && this.stack[0].name === SCREENS.HOME.name) {
         return;
       }
-      this.$emit('back')
+      this.$emit('back');
       this.$emit('screen', this.stack[this.stack.length - 1]);
       this.$emit('select', Object.values(this.stack[this.stack.length - 1].options)[0]);
     },
@@ -65,10 +74,12 @@ export default {
         this.$emit('forward', SCREENS.HOME);
       }
       const screen = this.getScreenForSelection(this.selectOption);
+      if (!screen) {
+        return;
+      }
       if (screen.name === SCREENS.MUSIC_PLAYER.name) {
-        //load queue into global state
-        this.setPlaying();
         this.setCurrentSongId(this.selectOption.id);
+        this.setPlaying();
         this.$emit('forward', screen);
         this.$emit('screen', screen);
         return;
@@ -77,8 +88,6 @@ export default {
       this.$emit('forward', screen);
       this.$emit('screen', screen);
       this.$emit('select', Object.values(screen.options)[0]);
-
-
     },
     getScreenForSelection(selection) {
 
@@ -94,17 +103,17 @@ export default {
       if (selection === MUSIC_OPTIONS.ARTISTS) {
         return SCREENS.ARTISTS;
       }
-      if (selection === MUSIC_OPTIONS.SHUFFLE) {
-        return SCREENS.SHUFFLE;
-      }
       if (typeof selection === 'object' && this.screen?.name === SCREENS.ALBUMS.name) {
         return SCREENS.SONG_SELECT;
       }
       if (typeof selection === 'object' && this.screen?.name === SCREENS.ARTISTS.name) {
         return SCREENS.SONG_SELECT;
       }
-      SCREENS.MUSIC_PLAYER.options = SCREENS.SONG_SELECT.options;
-      return SCREENS.MUSIC_PLAYER;
+      if (this.stack[this.stack.length - 1].name === SCREENS.SONG_SELECT.name) {
+        SCREENS.MUSIC_PLAYER.options = SCREENS.SONG_SELECT.options;
+        return SCREENS.MUSIC_PLAYER;
+      }
+      return undefined;
     },
     getDemoOptionsForSelection(selection, screen) {
       if (screen.name === SCREENS.ALBUMS.name) {
@@ -126,10 +135,21 @@ export default {
       }
       if (screen.name === SCREENS.SONG_SELECT.name) {
         if (selection.type === "album") {
-          return getTracksForAlbum(this.$cookies.get('access_token'), selection.id).then(response => response.items);
+          return getTracksForAlbum(this.$cookies.get('access_token'), selection.id).then(response => {
+            const tracks = response.items;
+            this.clearQueue();
+            this.addToQueue(tracks);
+            return response.items;
+          });
         }
         if (selection.type === "artist") {
-          return getTopTracksForArtist(this.$cookies.get('access_token'), selection.id).then(response => response.tracks)
+          //TODO: Search for songs by artist instead?
+          return getTopTracksForArtist(this.$cookies.get('access_token'), selection.id).then(response => {
+            const tracks = response.tracks;
+            this.clearQueue();
+            this.addToQueue(tracks);
+            return tracks;
+          })
         }
         return SETTING_OPTIONS;
       }
@@ -153,7 +173,14 @@ export default {
       }
     },
     handleMoveOuterRing(e) {
-      if (!this.mouseDown || e.target.className !== 'grid') {
+      if (!this.mouseDown) {
+        return;
+      }
+      if (this.step < 20) {
+        this.step++;
+        return;
+      }
+      if (e.target.className !== 'grid') {
         return;
       }
 
@@ -162,38 +189,38 @@ export default {
       const movementX = e.movementX;
       const movementY = e.movementY;
       const quadrant = this.determineQuadrant(e.offsetX, e.offsetY, e.target.clientWidth, e.target.clientHeight);
-      if (this.step < 25) {
-        this.step++;
-        return;
-      }
       if (movementX < 0) {
         if (quadrant === 2 || quadrant === 3) {
           keys[keys.indexOf(this.selectOption) + 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) + 1]);
         } else {
           keys[keys.indexOf(this.selectOption) - 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) - 1]);
         }
+        this.step = 0;
       } else if (movementX > 0) {
         if (quadrant === 2 || quadrant === 3) {
           keys[keys.indexOf(this.selectOption) - 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) - 1]);
         } else {
           keys[keys.indexOf(this.selectOption) + 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) + 1]);
         }
+        this.step = 0;
       }
 
       if (movementY < 0) {
         if (quadrant === 1 || quadrant === 2) {
-          keys[keys.indexOf(this.selectOption) + 1]   && this.$emit('select', keys[keys.indexOf(this.selectOption) + 1]);
+          keys[keys.indexOf(this.selectOption) + 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) + 1]);
         } else {
           keys[keys.indexOf(this.selectOption) - 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) - 1]);
         }
+        this.step = 0;
+
       } else if (movementY > 0) {
         if (quadrant === 1 || quadrant === 2) {
           keys[keys.indexOf(this.selectOption) - 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) - 1]);
         } else {
           keys[keys.indexOf(this.selectOption) + 1] && this.$emit('select', keys[keys.indexOf(this.selectOption) + 1]);
         }
+        this.step = 0;
       }
-      this.step = 0;
     },
     handleClickOuterRing() {
       this.mouseDown = true;
@@ -206,22 +233,31 @@ export default {
     handlePausePlay() {
       if (this.playerState === PlayerState.PLAYING) {
         this.setPaused();
-        this.player.togglePlay();
+        this.player.pause();
       } else {
         this.setPlaying();
-        this.player.togglePlay();
-
+        this.player.resume();
       }
     },
-    handleNextSong() {
-      this.nextSong();
-      this.player.nextTrack();
+    async handleNextSong() {
+      const state = await this.player.getCurrentState();
+      if (state.track_window?.next_track?.length > 0) {
+        await this.player.nextTrack();
+        this.setCurrentSongId(state.track_window?.current_track?.id);
+        return;
+      }
+      this.songQueue.shift();
+      if (this.songQueue.length > 0) {
+        this.setCurrentSongId(this.songQueue[0].id)
+      } else {
+        //do nothing
+      }
     },
     handlePreviousSong() {
       this.previousSong();
       this.player.previousTrack();
 
-    },
+    }
   }
 }
 </script>

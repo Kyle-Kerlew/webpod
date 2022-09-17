@@ -32,12 +32,6 @@ export const SCREENS = {
         isSongSelection: false,
         options: []
     },
-    SHUFFLE: {
-        name: "SHUFFLE",
-        isFullscreen: true,
-        isSongSelection: true,
-        // options: new Set(Object.values(SONG_DATA).map(obj => obj.artist))
-    },
     SONG_SELECT: {
         name: "SONG_SELECT",
         isFullscreen: true,

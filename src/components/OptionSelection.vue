@@ -17,8 +17,6 @@
 
 <script>
 
-import {SCREENS} from "@/data/Screens";
-
 export default {
 
   name: 'OptionSelection',
@@ -27,67 +25,42 @@ export default {
     hideArtist: Boolean,
     selectedOption: [String, Object],
   },
-  data() {
-    return {
-      counter: 0,
-    }
-  },
   computed: {
     currentlySelected() {
       return this.currentItems[this.currentItems.indexOf(this.selectedOption)];
     },
     currentItems() {
-      // if (this.screen?.name === SCREENS.ARTISTS?.name || this.screen?.name === SCREENS.ALBUMS.name) {
-      //   return this.removeDuplicates([...Object.values(this.screen.options)], this.screen.name === SCREENS.ARTISTS.name, this.screen.name === SCREENS.ALBUMS.name);
-      // }
       return Object.values(this.screen.options);
     }
   },
+
   watch: {
-    currentItems(curr, prev) {
-      if (prev) {
-        this.$refs.options.width = ""
-      }
-    },
     currentlySelected: {
       handler(curr) {
-        if (this.screen.name !== SCREENS.ARTISTS.name) {
+        const element = document.getElementById(curr.id);
+        if (!element) {
           return;
         }
-        this.counter++;
-        console.log(this.counter)
-        const element = document.getElementById(curr.id);
-        const elementBounds = element.getBoundingClientRect()
+        const elementBounds = element.getBoundingClientRect();
         const bounds = this.$refs.options.getBoundingClientRect();
         const height = element.clientHeight;
-        if (bounds.height - 20 < elementBounds.y - 20) {
-        console.log("height to scroll", height)
+        if (bounds.height < elementBounds.y - 20) {
           this.$refs.options.scrollBy({top: height, behavior: 'instant'})
-        } else if (bounds.top - 20 > elementBounds.y - 20) {
-        console.log("height to scroll", height)
+        } else if (bounds.top > elementBounds.y - 20) {
           this.$refs.options.scrollBy({top: -height, behavior: 'instant'})
         }
       },
       flush: 'post'
+    },
+    currentItems() {
+      //reset scroll position to top when an option is selected
+      this.$refs.options.scrollTo({top: 0});
     }
   }
 }
 </script>
 
 <style>
-.options {
-  list-style-type: none;
-  min-width: 100%;
-  height: 100%;
-  padding: unset;
-  margin: unset;
-  overflow-y: auto;
-}
-
-.options > li {
-  padding: 3px 0 3px 5px;
-  font-weight: bold;
-}
 
 .selected {
   background-color: #086aea;
@@ -107,5 +80,19 @@ export default {
 
 .scroll-container {
   overflow-y: scroll;
+}
+
+.options > li {
+  padding: 3px 0 3px 5px;
+  font-weight: bold;
+}
+
+.options {
+  list-style-type: none;
+  min-width: 100%;
+  height: 100%;
+  padding: unset;
+  margin: unset;
+  overflow-y: auto;
 }
 </style>

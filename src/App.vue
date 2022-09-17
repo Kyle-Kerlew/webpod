@@ -15,6 +15,11 @@ export default {
 </script>
 
 <style>
+
+p, img, div {
+ user-select: none;
+}
+
 body {
   font-family: sans-serif;
   font-size: 14px;

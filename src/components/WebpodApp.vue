@@ -1,46 +1,48 @@
 <template>
-  <div>
-    <PopupSelection v-if="!this.$cookies.get('access_token')"/>
-    <div class="container">
-      <div class="webpod-border">
-        <div class="screen-border">
-          <div>
-            <MusicPlayer :selectionTypeCallback="this.getSelectionType" v-if="this.screen.isSongSelection"/>
-            <div v-else
-                 :class="{'full-width-content-container': this.screen.isFullscreen, 'split-content-container': !this.screen.isFullscreen}">
-              <div :class="{'left-content':!this.screen.isFullscreen}">
-                <WebPodBanner/>
-                <OptionSelection :screen="this.screen" :hideArtist="this.hideArtist" v-slot="props"
-                                 :selectedOption="this.selectOption">
-                  <div class="item">
-                    <p><strong>{{ this.getSongData(props) }}</strong></p>
-                    <p v-if="!props.hideArtist">{{ props.item.artists?.[0].name }}</p>
-                  </div>
-                </OptionSelection>
-              </div>
-              <div v-if='!this.screen.isFullscreen' class="right-content">
-                <ContentCarousel v-if="this.getRightContent(this.selectOption)"
-                                 :type="this.getRightContentType(this.selectOption)"
-                                 :options="this.getRightContent(this.selectOption)" v-slot="props">
-                  <div v-if="props.type === 'custom'" class="about-container">
-                    <div class="text-container">
-                      <p>Made using</p>
-                      <div class="row">
-                        <img src="../assets/png/vuejs.png" width="16" height="16"/>
-                        <p>VueJS</p>
-                      </div>
-                    </div>
-                    {{ props.item }}
-                  </div>
-                  <img :src="props.item"/>
-                </ContentCarousel>
-              </div>
+  <PopupSelection v-if="!this.$cookies.get('access_token')"/>
+  <div class="container webpod-border">
+    <div class="screen-border">
+      <MusicPlayer v-if="this.screen.isSongSelection" :currentTrackMode="this.getSelectionType()"/>
+      <div v-else
+           :class="{'full-width-content-container': this.screen.isFullscreen, 'split-content-container': !this.screen.isFullscreen}">
+        <div :class="{'left-content':!this.screen.isFullscreen}">
+          <WebPodBanner/>
+          <OptionSelection :screen="this.screen" :hideArtist="this.hideArtist" v-slot="props"
+                           :selectedOption="this.selectOption">
+            <div class="item">
+              <p><strong>{{ this.getSongData(props) }}</strong></p>
+              <p v-if="!props.hideArtist">{{ props.item.artists?.[0].name }}</p>
             </div>
-          </div>
+          </OptionSelection>
         </div>
-        <PlayerControls @back="this.stack.pop()" @forward="this.stack.push($event)" :stack="this.stack" :screen="this.screen" :select-option="this.selectOption" @select="this.selectOption = $event" @screen="this.screen = $event"/>
+        <div v-if='!this.screen.isFullscreen' class="right-content">
+          <ContentCarousel
+              :type="this.getRightContentType(this.selectOption)"
+              :options="this.getRightContent(this.selectOption)" v-slot="props">
+            <div v-if="props.type === 'custom'" class="about-container">
+              <div class="text-container">
+                <p>Made using</p>
+                <div class="row">
+                  <img src="../assets/png/vuejs.png" alt="Vue Logo" width="16" height="16"/>
+                  <p>VueJS</p>
+                </div>
+              </div>
+              {{ props.item }}
+            </div>
+            <img :src="props.item"/>
+          </ContentCarousel>
+        </div>
       </div>
     </div>
+    <PlayerControls
+        @back="this.stack.pop()"
+        @forward="this.stack.push($event)"
+        @select="this.selectOption = $event"
+        @screen="this.screen = $event"
+        :stack="this.stack"
+        :screen="this.screen"
+        :select-option="this.selectOption"
+    />
   </div>
 </template>
 
@@ -52,7 +54,7 @@ import ContentCarousel from "@/components/ContentCarousel";
 import MusicPlayer from "@/components/MusicPlayer";
 import {SCREENS} from "@/data/Screens";
 import {usePlayerStore} from '@/store';
-import {mapActions, mapState} from "pinia";
+import {mapActions} from "pinia";
 import PopupSelection from "@/components/PopupSelection";
 import {getAlbums, transferPlayBack} from "@/service/PlayerService";
 import {reauthenticate} from "@/service/AuthService";
@@ -72,15 +74,14 @@ export default {
   data() {
     return {
       selectOption: MAIN_OPTIONS.MUSIC,
+      currentTrackMode: undefined,
       screen: SCREENS.HOME,
       albumImages: undefined,
       player: undefined,
-      current_track: undefined,
       stack: []
     }
   },
   computed: {
-    ...mapState(usePlayerStore, ['currentSong', 'songQueue', 'playerState', "mode", "token"]),
     hideArtist() {
       return false;
     },
@@ -90,7 +91,6 @@ export default {
     const script = document.createElement("script");
     script.src = "https://sdk.scdn.co/spotify-player.js";
     script.async = true;
-
     document.body.appendChild(script);
 
     window.onSpotifyWebPlaybackSDKReady = () => {
@@ -112,32 +112,25 @@ export default {
       });
 
       this.player = player;
-      player.addListener('ready', ({device_id}) => {
-        transferPlayBack(device_id, this.$cookies.get('access_token')).then(response => {
-          let count = 1;
-          while (!response.ok && count < 5) {
-            transferPlayBack(device_id, this.$cookies.get('access_token')).then(() => count++);
-          }
-        })
+      this.setPlayer(player);
+      player.addListener('ready', async ({device_id}) => {
+        let response = await transferPlayBack(device_id, this.$cookies.get('access_token'))
+        let count = 1;
+        while (!response.ok && count < 5) {
+          response = await transferPlayBack(device_id, this.$cookies.get('access_token'));
+          count++;
+        }
         this.setDeviceId(device_id);
         getAlbums(this.$cookies.get('access_token')).then(result => {
           this.albumImages = result.items.map(i => i.album.images[1].url);
-        })
-      })
-
-      player.addListener('player_state_changed', ({track_window: {current_track}}) => {
-        this.current_track = current_track;
-        this.setCurrentSongId(this.current_track.id);
+        });
       });
 
-      document.getElementsByClassName('pause-play')[0].onclick = function () {
-        player.togglePlay();
-      }
       player.connect();
     }
   },
   methods: {
-    ...mapActions(usePlayerStore, ['addToQueue', 'skipSong', 'nextSong', 'previousSong', 'setPlaying', 'setCurrentSongId', 'setPaused', 'setPlayer', 'setToken', 'setToSpotifyMode', 'setDeviceId']),
+    ...mapActions(usePlayerStore, ['setCurrentSongId', 'setToken', 'setPlayer', 'setToSpotifyMode', 'setDeviceId']),
     getSelectionType() {
       //last two pages are music_player and song_select
       const lastPage = this.stack[this.stack.length - 3];
@@ -161,29 +154,26 @@ export default {
     getRightContentType(selectOption) {
       const selected = MAIN_OPTIONS[selectOption] || selectOption;
       let result = undefined;
-      if (selected === MAIN_OPTIONS.MUSIC || selected === MAIN_OPTIONS.SETTINGS || selected === MUSIC_OPTIONS.ALBUMS || selected === MUSIC_OPTIONS.SHUFFLE || selected === MUSIC_OPTIONS.ARTISTS) {
+      if (selected === MAIN_OPTIONS.MUSIC || selected === MAIN_OPTIONS.SETTINGS || selected === MUSIC_OPTIONS.ALBUMS || selected === MUSIC_OPTIONS.ARTISTS) {
         result = 'img';
       }
       if (selected === SETTING_OPTIONS.ABOUT) {
-        result = 'custom'
+        result = 'custom';
       }
       return result;
     },
     getRightContent(selectOption) {
       const selected = MAIN_OPTIONS[selectOption] || selectOption;
       let result = undefined;
-      if (selected === MAIN_OPTIONS.MUSIC || selected === MUSIC_OPTIONS.ARTISTS || selected === MUSIC_OPTIONS.SHUFFLE || selected === MUSIC_OPTIONS.ALBUMS) {
+      if (selected === MAIN_OPTIONS.MUSIC || selected === MUSIC_OPTIONS.ARTISTS || selected === MUSIC_OPTIONS.ALBUMS) {
         const images = this.albumImages
-        if (images) {
-          result = Object.values(images);
-        } else {
-          result = undefined;
-        }
+        result = images ? Object.values(images) : undefined;
       }
 
       if (selected === MAIN_OPTIONS.SETTINGS) {
         result = Object.values(Object.freeze({SETTING: require('../assets/svg/gears.svg')}));
       }
+
       return result;
     },
 
@@ -193,8 +183,7 @@ export default {
 
 <style scoped>
 .container {
-  display: flex;
-  justify-content: space-around;
+  height: 100%;
 }
 
 .split-content-container {
@@ -218,6 +207,7 @@ export default {
   flex-direction: column;
   align-items: center;
   width: 370px;
+  margin: 0 auto;
   height: 100%;
   box-shadow: black 0 0 2.4em inset;
   background: linear-gradient(rgb(125, 124, 125) 0%, rgb(20, 19, 19) 100%);
@@ -237,7 +227,7 @@ export default {
 .screen-border {
   width: 85%;
   margin-top: 20px;
-  border: 3px black solid;
+  border: 5px black solid;
   border-radius: 10px;
   overflow: hidden;
   height: 230px;

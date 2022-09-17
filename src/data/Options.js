@@ -7,8 +7,6 @@ export const MAIN_OPTIONS = Object.freeze({
 export const MUSIC_OPTIONS = Object.freeze({
     ARTISTS: 'Artists',
     ALBUMS: 'Albums',
-    SHUFFLE: 'Shuffle Songs',
-
 });
 export const SETTING_OPTIONS = Object.freeze({
     ABOUT: 'About',
