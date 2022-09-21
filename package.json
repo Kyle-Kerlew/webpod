@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite --",
+    "dev": "vite",
     "build": "vite build",
     "serve": "vite preview"
   },
@@ -14,10 +14,6 @@
     "vue": "^3.2.13",
     "vue-cookies": "^1.8.1",
     "vue-router": "^4.0.16"
-  },
-  "devDependencies": {
-    "dotenv": "^16.0.1",
-    "eslint-plugin-vue": "^8.7.1"
   },
   "browserslist": [
     "> 1%",
