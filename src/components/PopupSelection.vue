@@ -38,7 +38,7 @@ export default {
 
       const auth_query_parameters = new URLSearchParams({
         response_type: "code",
-        client_id: import.meta.env.SPOTIFY_CLIENT_ID,
+        client_id: import.meta.env.VITE_SPOTIFY_CLIENT_ID,
         scope: scope,
         redirect_uri: "http://localhost:3000/auth/callback",
         state: state

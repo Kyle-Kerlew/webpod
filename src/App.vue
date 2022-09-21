@@ -22,7 +22,7 @@ p, img, div {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  font-size: 14px;
+  font-size: 16px;
   background: #7d7d7d;
   height: 100vh;
   overflow: hidden;
