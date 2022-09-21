@@ -23,7 +23,7 @@ export const usePlayerStore = defineStore('main', {
             this.deviceId = deviceId
         },
         setToken(token) {
-          this.token = token;
+            this.token = token;
         },
         setToDemoMode() {
             this.mode = Mode.DEMO;
@@ -37,13 +37,21 @@ export const usePlayerStore = defineStore('main', {
         clearQueue() {
             this.songQueue = [];
         },
-        skipSong() {
-            this.player.nextTrack().then(res => {
-                this.setCurrentSongId(res.id);
-            })
+        nextSong() {
+            this.currentSongIndex++;
+        },
+        handleEndSong() {
+            if (this.songQueue.length === 0) {
+                return;
+            }
+            this.currentSongIndex++;
+            this.setCurrentSongId(this.songQueue[this.currentSongIndex].id)
         },
         setPlaying() {
             this.playerState = PlayerState.PLAYING;
+        },
+        setCurrentSongIndex(index) {
+            this.currentSongIndex = index;
         },
         setCurrentSongId(songId) {
             this.currentSongId = songId;
@@ -55,7 +63,6 @@ export const usePlayerStore = defineStore('main', {
             if (this.currentSongIndex === 0) {
                 return;
             }
-            this.currentSongId = this.songQueue[this.currentSongIndex - 1];
             this.currentSongIndex--;
         }
     }

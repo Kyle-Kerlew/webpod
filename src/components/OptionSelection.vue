@@ -35,22 +35,19 @@ export default {
   },
 
   watch: {
-    currentlySelected: {
-      handler(curr) {
-        const element = document.getElementById(curr.id);
-        if (!element) {
-          return;
-        }
-        const elementBounds = element.getBoundingClientRect();
-        const bounds = this.$refs.options.getBoundingClientRect();
-        const height = element.clientHeight;
-        if (bounds.height < elementBounds.y - 20) {
-          this.$refs.options.scrollBy({top: height, behavior: 'instant'})
-        } else if (bounds.top > elementBounds.y - 20) {
-          this.$refs.options.scrollBy({top: -height, behavior: 'instant'})
-        }
-      },
-      flush: 'post'
+    currentlySelected(curr) {
+      const element = document.getElementById(curr.id);
+      if (!element) {
+        return;
+      }
+      const elementBounds = element.getBoundingClientRect();
+      const bounds = this.$refs.options.getBoundingClientRect();
+      const height = element.clientHeight;
+      if (bounds.height < elementBounds.y - 20) {
+        this.$refs.options.scrollBy({top: height, behavior: 'instant'})
+      } else if (bounds.top > elementBounds.y - 20) {
+        this.$refs.options.scrollBy({top: -height, behavior: 'instant'})
+      }
     },
     currentItems() {
       //reset scroll position to top when an option is selected

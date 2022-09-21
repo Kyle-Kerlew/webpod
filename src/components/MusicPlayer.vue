@@ -2,7 +2,7 @@
   <WebPodBanner/>
   <div v-if="this.currentSong" class="info-container">
     <div class="row">
-      <img class='skew' :src="this.currentSong?.album?.images?.[0].url" alt="Album Photo"/>
+      <img class='skew reflect' :src="this.currentSong?.album?.images?.[0].url" alt="Album Photo"/>
       <div class="text-container">
         <div class="primary">
           <p class="bolded">{{ this.currentSong?.name }}</p>
@@ -15,17 +15,17 @@
       </div>
     </div>
     <div class="full-width">
-      <SongProgress :current-song="this.currentSong" @end-song="this.handleEndSong"/>
+      <SongProgress :current-song="this.currentSong"/>
     </div>
   </div>
 </template>
 
 <script>
-import SongProgress from "@/components/SongProgress";
+import SongProgress from "@/components/SongProgress.vue";
 import {mapActions, mapState} from "pinia";
 import {usePlayerStore} from "@/store";
 import {getSong, playSong} from "@/service/PlayerService";
-import WebPodBanner from "@/components/WebPodBanner";
+import WebPodBanner from "@/components/WebPodBanner.vue";
 
 export default {
   name: "MusicPlayer",
@@ -39,7 +39,7 @@ export default {
     }
   },
   computed: {
-    ...(mapState(usePlayerStore, ['token', 'songQueue', 'deviceId', 'currentSongId', 'player'])),
+    ...(mapState(usePlayerStore, ['token', 'currentSongIndex', 'songQueue', 'deviceId', 'currentSongId', 'player'])),
   },
   mounted() {
     if (!this.currentSong) {
@@ -50,28 +50,16 @@ export default {
     }
   },
   methods: {
-    ...(mapActions(usePlayerStore, ['setCurrentSongId', 'clearQueue'])),
+    ...(mapActions(usePlayerStore, ['setCurrentSongId', 'nextSong', 'clearQueue'])),
     async play() {
       await playSong(this.deviceId, this.$cookies.get('access_token'), this.currentSong?.id);
       this.player.togglePlay();
     },
-    handleEndSong() {
-      this.player.getCurrentState().then(result => {
-            if (this.currentTrackMode === "artist") {
-              this.songQueue.shift();
-              const currSong = this.songQueue[0];
-              this.setCurrentSongId(currSong.id)
-              if (this.songQueue.length === 0) {
-                return;
-              }
-            }
-            this.setCurrentSongId(result.track_window?.current_track?.id)
-          }
-      );
-    }
+
   },
   watch: {
     currentSongId(curr) {
+      console.log("song changing")
       getSong(this.$cookies.get('access_token'), curr).then(response => {
         this.currentSong = response;
         this.play();
@@ -85,7 +73,9 @@ export default {
 .info-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-around;
+  height: calc(100% - 21px);  /*Minus height of screen-banner*/
+  background: white;
 }
 
 img {
@@ -110,14 +100,17 @@ img {
 .skew {
   transform: rotateY(18deg);
 }
+.reflect {
+  -webkit-box-reflect: below 0px -webkit-gradient(linear, 0% 0%, 0% 100%, from(transparent), color-stop(0.7, transparent), to(rgba(250, 250, 250, 0.1)))
+}
 
 .row {
+  height: auto;
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
   gap: 10px;
-  padding: 15px;
+  padding: 0 15px;
   perspective: 500px;
 }
 

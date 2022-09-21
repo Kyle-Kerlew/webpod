@@ -1,65 +1,67 @@
 <template>
   <PopupSelection v-if="!this.$cookies.get('access_token')"/>
-  <div class="container webpod-border">
-    <div class="screen-border">
-      <MusicPlayer v-if="this.screen.isSongSelection" :currentTrackMode="this.getSelectionType()"/>
-      <div v-else
-           :class="{'full-width-content-container': this.screen.isFullscreen, 'split-content-container': !this.screen.isFullscreen}">
-        <div :class="{'left-content':!this.screen.isFullscreen}">
-          <WebPodBanner/>
-          <OptionSelection :screen="this.screen" :hideArtist="this.hideArtist" v-slot="props"
-                           :selectedOption="this.selectOption">
-            <div class="item">
-              <p><strong>{{ this.getSongData(props) }}</strong></p>
-              <p v-if="!props.hideArtist">{{ props.item.artists?.[0].name }}</p>
-            </div>
-          </OptionSelection>
-        </div>
-        <div v-if='!this.screen.isFullscreen' class="right-content">
-          <ContentCarousel
-              :type="this.getRightContentType(this.selectOption)"
-              :options="this.getRightContent(this.selectOption)" v-slot="props">
-            <div v-if="props.type === 'custom'" class="about-container">
-              <div class="text-container">
-                <p>Made using</p>
-                <div class="row">
-                  <img src="../assets/png/vuejs.png" alt="Vue Logo" width="16" height="16"/>
-                  <p>VueJS</p>
-                </div>
+  <div class="container">
+    <div class="webpod-border">
+      <div class="screen-border">
+        <MusicPlayer v-if="this.screen.isSongSelection" :currentTrackMode="this.getSelectionType()"/>
+        <div v-else
+             :class="{'full-width-content-container': this.screen.isFullscreen, 'split-content-container': !this.screen.isFullscreen}">
+          <div :class="{'left-content':!this.screen.isFullscreen}">
+            <WebPodBanner/>
+            <OptionSelection :screen="this.screen" :hideArtist="this.hideArtist" v-slot="props"
+                             :selectedOption="this.selectOption">
+              <div class="item">
+                <p><strong>{{ this.getSongData(props) }}</strong></p>
+                <p v-if="!props.hideArtist">{{ props.item.artists?.[0].name }}</p>
               </div>
-              {{ props.item }}
-            </div>
-            <img :src="props.item"/>
-          </ContentCarousel>
+            </OptionSelection>
+          </div>
+          <div v-if='!this.screen.isFullscreen' class="right-content">
+            <ContentCarousel
+                :type="this.getRightContentType(this.selectOption)"
+                :options="this.getRightContent(this.selectOption)" v-slot="props">
+              <div v-if="props.type === 'custom'" class="about-container">
+                <div class="text-container">
+                  <p>Made using</p>
+                  <div class="row">
+                    <img src="../assets/png/vuejs.png" alt="Vue Logo" width="16" height="16"/>
+                    <p>VueJS</p>
+                  </div>
+                </div>
+                {{ props.item }}
+              </div>
+              <img :src="props.item"/>
+            </ContentCarousel>
+          </div>
         </div>
       </div>
+      <PlayerControls
+          @back="this.stack.pop()"
+          @forward="this.stack.push($event)"
+          @select="this.selectOption = $event"
+          @screen="this.screen = $event"
+          :stack="this.stack"
+          :screen="this.screen"
+          :select-option="this.selectOption"
+      />
     </div>
-    <PlayerControls
-        @back="this.stack.pop()"
-        @forward="this.stack.push($event)"
-        @select="this.selectOption = $event"
-        @screen="this.screen = $event"
-        :stack="this.stack"
-        :screen="this.screen"
-        :select-option="this.selectOption"
-    />
   </div>
 </template>
 
 <script>
 
-import OptionSelection from "@/components/OptionSelection";
+import OptionSelection from "@/components/OptionSelection.vue";
 import {MAIN_OPTIONS, MUSIC_OPTIONS, SETTING_OPTIONS} from "@/data/Options";
-import ContentCarousel from "@/components/ContentCarousel";
-import MusicPlayer from "@/components/MusicPlayer";
+import ContentCarousel from "@/components/ContentCarousel.vue";
+import MusicPlayer from "@/components/MusicPlayer.vue";
 import {SCREENS} from "@/data/Screens";
 import {usePlayerStore} from '@/store';
 import {mapActions} from "pinia";
-import PopupSelection from "@/components/PopupSelection";
+import PopupSelection from "@/components/PopupSelection.vue";
 import {getAlbums, transferPlayBack} from "@/service/PlayerService";
 import {reauthenticate} from "@/service/AuthService";
-import WebPodBanner from "@/components/WebPodBanner";
-import PlayerControls from "@/components/PlayerControls";
+import WebPodBanner from "@/components/WebPodBanner.vue";
+import PlayerControls from "@/components/PlayerControls.vue";
 
 export default {
   name: 'WebpodApp',
@@ -184,6 +186,9 @@ export default {
 <style scoped>
 .container {
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .split-content-container {
@@ -207,10 +212,11 @@ export default {
   flex-direction: column;
   align-items: center;
   width: 370px;
-  margin: 0 auto;
-  height: 100%;
+  max-height: 592px;
   box-shadow: black 0 0 2.4em inset;
   background: linear-gradient(rgb(125, 124, 125) 0%, rgb(20, 19, 19) 100%);
+  -webkit-box-reflect: below 0px -webkit-gradient(linear, 0% 0%, 0% 100%, from(transparent), color-stop(0.5, transparent), to(rgba(250, 250, 250, 0.3)));
+  animation: 1.5s ease 0s 1 normal none running descend;
 }
 
 .left-content {
@@ -231,7 +237,6 @@ export default {
   border-radius: 10px;
   overflow: hidden;
   height: 230px;
-  background-color: white;
 }
 
 .right-content {

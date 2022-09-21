@@ -1,11 +1,10 @@
 <template>
-  <div v-if="this.currentSong" class="row-container">
+  <div class="row-container">
     <p>{{ this.convertToFormattedString(this.currentTimeInSeconds) }}</p>
     <div class="progress-container">
       <div ref="progressBar" class="progress-bar"/>
     </div>
-    <p>{{
-        this.convertToFormattedString(this.lengthInSeconds(this.currentSong.duration_ms) - this.currentTimeInSeconds)
+    <p>{{this.convertToFormattedString(this.lengthInSeconds(this.songQueue[this.currentSongIndex].duration_ms) - this.currentTimeInSeconds)
       }}</p>
 
   </div>
@@ -16,29 +15,30 @@ import {mapState} from "pinia/dist/pinia.mjs";
 import {usePlayerStore} from "@/store";
 import {PlayerState} from "@/constants/PlayerState";
 import {mapActions} from "pinia/dist/pinia";
+import {playSong} from "@/service/PlayerService";
 
 export default {
   name: "SongProgress",
   data() {
     return {
       currentTimeInSeconds: 0,
+      isMounted: true,
       intervalId: undefined,
     }
   },
-  props: {
-    currentSong: Object
-  },
   computed: {
-    ...mapState(usePlayerStore, ['playerState'])
+    ...mapState(usePlayerStore, ['playerState', 'deviceId', 'songQueue', 'currentSongIndex', 'currentSongId'])
   },
   mounted() {
+    this.isMounted = true;
     this.play();
   },
   unmounted() {
-    clearInterval(this.intervalId);
+    this.isMounted = false;
+
   },
   methods: {
-    ...mapActions(usePlayerStore, ['setPlaying', 'skipSong']),
+    ...mapActions(usePlayerStore, ['setPlaying', 'handleEndSong', 'skipSong']),
     lengthInSeconds(timeInMilliseconds) {
       return Math.round(timeInMilliseconds * 0.001);
     },
@@ -56,15 +56,26 @@ export default {
       return `${minutesWholeNumber}:${secondsWithPrefixedZero || seconds}`;
     },
     updateProgressBar() {
-      this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds(this.currentSong.duration_ms) * 100) + "%"
+      this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds(this.songQueue[this.currentSongIndex].duration_ms) * 100) + "%"
+    },
+    changeSongs() {
+      this.currentTimeInSeconds = 0;
+      clearInterval(this.intervalId);
+      this.play();
     },
     play() {
 
       this.intervalId = setInterval(() => {
-        if (this.currentTimeInSeconds === this.lengthInSeconds(this.currentSong.duration_ms)) {
-          clearInterval(this.intervalId);
-          this.currentTimeInSeconds = 0;
-          this.$emit('end-song');
+        if (this.currentTimeInSeconds === this.lengthInSeconds(this.songQueue[this.currentSongIndex].duration_ms)) {
+          this.handleEndSong();
+          const nextSong = this.songQueue[this.currentSongIndex + 1];
+          if (!this.isMounted) {
+            playSong(this.deviceId, this.$cookies.get("access_token"), nextSong.id)
+            this.changeSongs();
+          } else {
+            this.currentTimeInSeconds = 0;
+            clearInterval(this.intervalId);
+          }
           return;
         }
         if (this.playerState === PlayerState.PAUSED) {
@@ -73,7 +84,9 @@ export default {
         }
 
         this.currentTimeInSeconds++;
-        this.updateProgressBar();
+        if (this.isMounted) {
+          this.updateProgressBar();
+        }
       }, 1000);
     }
   },
@@ -83,10 +96,8 @@ export default {
         this.play();
       }
     },
-    currentSong() {
-      this.currentTimeInSeconds = 0;
-      clearInterval(this.intervalId);
-      this.play();
+    currentSongId() {
+      console.log("changing current song id");
     }
   }
 }
@@ -95,8 +106,7 @@ export default {
 <style scoped>
 .progress-container {
   display: flex;
-  box-shadow: black 0 0 8px 0 inset;
-  background-color: white;
+  background: linear-gradient(0deg, rgba(193, 193, 193, 1) 0%, rgba(255, 255, 255, 1) 15%, rgba(255, 255, 255, 1) 83%, rgba(193, 193, 193, 1) 100%);
   height: 20px;
   width: 75%;
 }
@@ -107,11 +117,17 @@ export default {
   align-items: center;
   gap: 5px;
   width: 100%;
+  padding: 0 25px;
+  -webkit-box-reflect: below 0 -webkit-gradient(linear, 0% 0%, 0% 100%, from(transparent), color-stop(0.6, transparent), to(rgba(250, 250, 250, 0.1)));
+}
+
+.row-container p {
+  margin: unset;
 }
 
 .progress-bar {
   width: 0;
-  background-color: #086aea;
+  background-image: linear-gradient(0deg, hsl(214deg 100% 69%) 0%, hsla(214, 93%, 47%, 1) 100%);
 }
 
 </style>

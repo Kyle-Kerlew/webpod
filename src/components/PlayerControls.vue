@@ -29,7 +29,6 @@
 import {SCREENS} from "@/data/Screens";
 import {PlayerState} from "@/constants/PlayerState";
 import {MAIN_OPTIONS, MUSIC_OPTIONS, SETTING_OPTIONS} from "@/data/Options";
-import {SONG_DATA} from "@/data/PlayerData";
 import {Mode} from "@/constants/PlayerMode";
 import {
   getAlbums,
@@ -54,10 +53,10 @@ export default {
     }
   },
   computed: {
-    ...mapState(usePlayerStore, ['deviceId', 'songQueue', 'player', 'playerState'])
+    ...mapState(usePlayerStore, ['deviceId', 'songQueue', 'currentSongIndex', 'player', 'playerState'])
   },
   methods: {
-    ...mapActions(usePlayerStore, ['skipSong', 'clearQueue', 'addToQueue', 'previousSong', 'setPlaying', 'setPaused', 'setCurrentSongId']),
+    ...mapActions(usePlayerStore, ['previousSong', 'nextSong', 'setCurrentSongIndex', 'clearQueue', 'addToQueue', 'previousSong', 'setPlaying', 'setPaused', 'setCurrentSongId']),
     goBack() {
       if (!this.stack || this.stack.length === 1 && this.stack[0].name === SCREENS.HOME.name) {
         return;
@@ -79,6 +78,7 @@ export default {
       }
       if (screen.name === SCREENS.MUSIC_PLAYER.name) {
         this.setCurrentSongId(this.selectOption.id);
+        this.setCurrentSongIndex(this.songQueue.findIndex(s => s.id === this.selectOption.id));
         this.setPlaying();
         this.$emit('forward', screen);
         this.$emit('screen', screen);
@@ -90,7 +90,6 @@ export default {
       this.$emit('select', Object.values(screen.options)[0]);
     },
     getScreenForSelection(selection) {
-
       if (selection === MAIN_OPTIONS.MUSIC) {
         return SCREENS.MUSIC;
       }
@@ -114,14 +113,6 @@ export default {
         return SCREENS.MUSIC_PLAYER;
       }
       return undefined;
-    },
-    getDemoOptionsForSelection(selection, screen) {
-      if (screen.name === SCREENS.ALBUMS.name) {
-        return Object.values(SONG_DATA).filter(song => song.album === selection.album);
-      }
-      if (screen.name === SCREENS.ARTISTS.name) {
-        return Object.values(SONG_DATA).filter(song => song.artist === selection.album);
-      }
     },
     async getOptionsForSelection(selection, screen) {
       if (this.mode === Mode.DEMO) {
@@ -227,8 +218,6 @@ export default {
     },
     handleMouseup() {
       this.mouseDown = false;
-      this.prevX = undefined;
-      this.prevY = undefined;
     },
     handlePausePlay() {
       if (this.playerState === PlayerState.PLAYING) {
@@ -246,16 +235,25 @@ export default {
         this.setCurrentSongId(state.track_window?.current_track?.id);
         return;
       }
-      this.songQueue.shift();
-      if (this.songQueue.length > 0) {
-        this.setCurrentSongId(this.songQueue[0].id)
-      } else {
-        //do nothing
+      this.nextSong();
+      if (!this.songQueue[this.currentSongIndex]) {
+        return;
       }
+      this.setCurrentSongId(this.songQueue[this.currentSongIndex].id)
     },
-    handlePreviousSong() {
+    async handlePreviousSong() {
+      const state = await this.player.getCurrentState();
+      if (state.track_window?.previous_tracks?.length > 0) {
+        await this.player.previousTrack();
+        this.setCurrentSongId(state.track_window?.current_track?.id);
+        return;
+      }
+      if (this.currentSongIndex === 0) {
+        return;
+      }
+
       this.previousSong();
-      this.player.previousTrack();
+      this.setCurrentSongId(this.songQueue[this.currentSongIndex].id);
 
     }
   }

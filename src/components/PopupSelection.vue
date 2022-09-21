@@ -1,10 +1,9 @@
 <template>
   <div class="background-container">
     <div class="selection-container">
-      <p>This application can connect to your personal Spotify or can be put in demo mode. Demo mode can be interacted
-        with but will not play audio.</p>
+      <p> This application requires Spotify Premium to be able to play music. You can view a demo video of the app or continue </p>
       <div class="selections">
-        <button @click="this.handleSpotifySelection">Spotify</button>
+        <button @click="this.handleSpotifySelection">Continue</button>
         <button @click="this.handleDemoSelection">Demo</button>
       </div>
     </div>
@@ -39,7 +38,7 @@ export default {
 
       const auth_query_parameters = new URLSearchParams({
         response_type: "code",
-        client_id: process.env.VUE_APP_SPOTIFY_CLIENT_ID,
+        client_id: import.meta.env.SPOTIFY_CLIENT_ID,
         scope: scope,
         redirect_uri: "http://localhost:3000/auth/callback",
         state: state
@@ -47,7 +46,7 @@ export default {
       window.location = 'https://accounts.spotify.com/authorize/?' + auth_query_parameters.toString();
     },
     handleDemoSelection() {
-      this.setToDemoMode();
+      window.location = "www.google.com";
     },
     generateRandomString(length) {
       let text = '';
@@ -77,27 +76,28 @@ export default {
   position: fixed;
   border: 2px black solid;
   width: 300px;
-  padding: 1rem 2rem;
+  padding: 2rem;
   box-shadow: black 0 0 5px 0;
-  height: 200px;
   inset: 0;
+  height: fit-content;
   margin: auto;
   background-color: white;
 }
 
 .selection-container > p {
   text-align: center;
+  margin-top: 0;
 }
 
 .selections {
   display: flex;
-  justify-content: space-between;
-  width: 50%;
-  margin: 0 auto;
+  justify-content: center;
+  padding: 0 20%;
+  gap: 15px;
 }
 
 .selections > button {
-  width: 4rem;
   height: 3rem;
+  width: 100%;
 }
 </style>

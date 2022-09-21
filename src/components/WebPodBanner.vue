@@ -23,7 +23,7 @@ export default {
   },
   data() {
     return {
-      text: 'webpod.js',
+      text: 'WebPod.js',
     }
   }
 }

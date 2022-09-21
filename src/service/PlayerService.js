@@ -70,21 +70,3 @@ export const playSong = (deviceId, token, songId) => {
         headers: authHeader
     });
 }
-export const queueAndPlay = (deviceId, token, uri, trackOffset) => {
-    const authHeader = {
-        'Authorization': `Bearer ${token}`,
-    }
-    const body = {
-        context_uri: uri
-    };
-    if (trackOffset) {
-        body.offset = {
-            position: trackOffset
-        }
-    }
-    return fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-        method: "PUT",
-        body: JSON.stringify(body),
-        headers: authHeader
-    });
-}

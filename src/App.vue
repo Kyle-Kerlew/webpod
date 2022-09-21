@@ -4,7 +4,7 @@
 
 <script>
 
-import WebpodApp from "@/components/WebpodApp";
+import WebpodApp from "@/components/WebpodApp.vue";
 
 export default {
   name: 'App',
@@ -21,11 +21,16 @@ p, img, div {
 }
 
 body {
-  font-family: sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   font-size: 14px;
-  background: black;
+  background: #7d7d7d;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
 }
-
+#app {
+  height: 100%;
+}
 ::-webkit-scrollbar {
   width: 10px;
 }

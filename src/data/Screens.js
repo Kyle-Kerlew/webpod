@@ -1,5 +1,4 @@
 import {MAIN_OPTIONS, MUSIC_OPTIONS, SETTING_OPTIONS} from "@/data/Options";
-import {SONG_DATA} from "@/data/PlayerData";
 
 export const SCREENS = {
     HOME: {
@@ -24,7 +23,7 @@ export const SCREENS = {
         name: "ARTISTS",
         isFullscreen: true,
         isSongSelection: false,
-        options: Object.values(SONG_DATA)
+        options: {}
     },
     ALBUMS: {
         name: "ALBUMS",
