@@ -65,7 +65,6 @@ export default {
     },
     play() {
 
-      console.log("Playing song index", this.getCurrentSongIndex())
       this.intervalId = setInterval(() => {
         if (this.currentTimeInSeconds === this.lengthInSeconds(this.songQueue[this.getCurrentSongIndex()].duration_ms)) {
           this.handleEndSong();

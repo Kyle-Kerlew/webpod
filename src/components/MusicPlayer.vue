@@ -59,7 +59,6 @@ export default {
   },
   watch: {
     currentSongId(curr) {
-      console.log("song changing")
       getSong(this.$cookies.get('access_token'), curr).then(response => {
         this.currentSong = response;
         this.play();
