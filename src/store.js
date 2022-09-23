@@ -59,6 +59,9 @@ export const usePlayerStore = defineStore('main', {
         setPaused() {
             this.playerState = PlayerState.PAUSED;
         },
+        getCurrentSongIndex() {
+            return this.currentSongIndex
+        },
         previousSong() {
             if (this.currentSongIndex === 0) {
                 return;

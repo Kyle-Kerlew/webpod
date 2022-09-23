@@ -4,7 +4,7 @@
     <div class="progress-container">
       <div ref="progressBar" class="progress-bar"/>
     </div>
-    <p>{{this.convertToFormattedString(this.lengthInSeconds(this.songQueue[this.currentSongIndex].duration_ms) - this.currentTimeInSeconds)
+    <p>{{this.convertToFormattedString(this.lengthInSeconds(this.songQueue[this.getCurrentSongIndex()].duration_ms) - this.currentTimeInSeconds)
       }}</p>
 
   </div>
@@ -38,7 +38,7 @@ export default {
 
   },
   methods: {
-    ...mapActions(usePlayerStore, ['setPlaying', 'handleEndSong', 'skipSong']),
+    ...mapActions(usePlayerStore, ['setPlaying', 'handleEndSong', 'skipSong', 'getCurrentSongIndex']),
     lengthInSeconds(timeInMilliseconds) {
       return Math.round(timeInMilliseconds * 0.001);
     },
@@ -56,7 +56,7 @@ export default {
       return `${minutesWholeNumber}:${secondsWithPrefixedZero || seconds}`;
     },
     updateProgressBar() {
-      this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds(this.songQueue[this.currentSongIndex].duration_ms) * 100) + "%"
+      this.$refs.progressBar.style.width = Math.floor(this.currentTimeInSeconds / this.lengthInSeconds(this.songQueue[this.getCurrentSongIndex()].duration_ms) * 100) + "%"
     },
     changeSongs() {
       this.currentTimeInSeconds = 0;
@@ -65,10 +65,11 @@ export default {
     },
     play() {
 
+      console.log("Playing song index", this.getCurrentSongIndex())
       this.intervalId = setInterval(() => {
-        if (this.currentTimeInSeconds === this.lengthInSeconds(this.songQueue[this.currentSongIndex].duration_ms)) {
+        if (this.currentTimeInSeconds === this.lengthInSeconds(this.songQueue[this.getCurrentSongIndex()].duration_ms)) {
           this.handleEndSong();
-          const nextSong = this.songQueue[this.currentSongIndex + 1];
+          const nextSong = this.songQueue[this.getCurrentSongIndex()];
           if (!this.isMounted) {
             playSong(this.deviceId, this.$cookies.get("access_token"), nextSong.id)
             this.changeSongs();
@@ -97,7 +98,7 @@ export default {
       }
     },
     currentSongId() {
-      console.log("changing current song id");
+      this.changeSongs();
     }
   }
 }

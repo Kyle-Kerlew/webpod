@@ -173,7 +173,7 @@ export default {
       }
 
       if (selected === MAIN_OPTIONS.SETTINGS) {
-        result = Object.values(Object.freeze({SETTING: require('../assets/svg/gears.svg')}));
+        result = Object.values(Object.freeze({SETTING: import('../assets/svg/gears.svg')}));
       }
 
       return result;
