@@ -16,9 +16,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 dispatch.yaml
-
-../../AppData/Roaming/JetBrains/WebStorm2022.2/scratches/app.yaml
 app.yaml
+
 # Editor directories and files
 .idea
 .vscode
