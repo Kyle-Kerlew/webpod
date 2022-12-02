@@ -1,5 +1,0 @@
-dispatch:
-  - url: "webpod.kylekerlew.com/*"
-    service: webpod
-  - url: "webpod-api.kylekerlew.com/*"
-    service: webpod-api
