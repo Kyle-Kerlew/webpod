@@ -1,0 +1,9 @@
+runtime: nodejs16
+service: webpod-api
+
+env_variables:
+  SPOTIFY_CLIENT_ID: ***REMOVED***
+  SPOTIFY_CLIENT_SECRET: ***REMOVED***
+  NODE_ENV: Production
+  BACKEND_URL: https://webpod-api.kylekerlew.com
+  FRONTEND_URL: https://webpod.kylekerlew.com

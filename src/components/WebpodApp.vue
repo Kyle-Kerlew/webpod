@@ -24,7 +24,7 @@
                 <div class="text-container">
                   <p>Made using</p>
                   <div class="row">
-                    <img src="../assets/png/vuejs.png" alt="Vue Logo" width="16" height="16"/>
+                    <img v-bind:src="vueJsIcon" alt="Vue Logo" width="16" height="16"/>
                     <p>VueJS</p>
                   </div>
                 </div>
@@ -62,6 +62,8 @@ import {getAlbums, transferPlayBack} from "@/service/PlayerService";
 import {reauthenticate} from "@/service/AuthService";
 import WebPodBanner from "@/components/WebPodBanner.vue";
 import PlayerControls from "@/components/PlayerControls.vue";
+import vuejs from "@/assets/png/vuejs.png"
+import crypto from "crypto";
 
 export default {
   name: 'WebpodApp',
@@ -90,11 +92,6 @@ export default {
   },
   mounted() {
     this.setToSpotifyMode();
-    const script = document.createElement("script");
-    script.src = "https://sdk.scdn.co/spotify-player.js";
-    script.async = true;
-    document.body.appendChild(script);
-
     window.onSpotifyWebPlaybackSDKReady = () => {
       let accessCount = 1;
       const player = new window.Spotify.Player({
