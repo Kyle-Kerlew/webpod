@@ -40,13 +40,13 @@ export default {
         response_type: "code",
         client_id: import.meta.env.VITE_SPOTIFY_CLIENT_ID,
         scope: scope,
-        redirect_uri: "http://localhost:3000/auth/callback",
+        redirect_uri: `${import.meta.env.VITE_BACKEND_URL}/auth/callback`,
         state: state
       })
       window.location = 'https://accounts.spotify.com/authorize/?' + auth_query_parameters.toString();
     },
     handleDemoSelection() {
-      window.location = "www.google.com";
+      window.location = "index.js.google.com";
     },
     generateRandomString(length) {
       let text = '';

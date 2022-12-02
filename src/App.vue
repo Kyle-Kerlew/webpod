@@ -5,11 +5,16 @@
 <script>
 
 import WebpodApp from "@/components/WebpodApp.vue";
-
+import vueJsIcon from "@/assets/png/vuejs.png";
 export default {
   name: 'App',
   components: {
     WebpodApp
+  },
+  data() {
+    return {
+      vueJsIcon
+    }
   }
 }
 </script>

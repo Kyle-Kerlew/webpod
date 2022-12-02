@@ -1,0 +1,15 @@
+runtime: nodejs16
+service: webpod
+handlers:
+  - url: /
+    static_files: dist/index.html
+    upload: dist/index.html
+
+  - url: /(.*)
+    static_files: dist/\1
+    upload: dist/(.*)
+
+env_variables:
+  VITE_SPOTIFY_CLIENT_ID: 8848c71f339348a3bda7228467d547e2
+  VITE_BACKEND_URL: https://webpod-api.kylekerlew.com
+  VITE_FRONTEND_URL: https://webpod.kylekerlew.com
