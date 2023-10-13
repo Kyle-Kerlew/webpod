@@ -7,9 +7,9 @@ This project is live at https://webpod.kylekerlew.com. The subdomain is hosted o
 
 ## Major Technologies used 🛠️
 
-- [Spotify API] (https://developer.spotify.com/documentation/web-api/) - Spotify API used to retrieve user data
-- [Vue v3] (https://v3.vuejs.org/) - Frontend framework used to build the app (using the Options API)
-- [Vite v3] (https://vitejs.dev/) - Build tool used to bundle the app
-- [Pinia v2] (https://pinia.esm.dev/) - State management library
-- [vue-cookies v1.8] (https://www.npmjs.com/package/vue-cookies) - Cookie management library
+- [Spotify API](https://developer.spotify.com/documentation/web-api/) - Spotify API used to retrieve user data
+- [Vue v3](https://v3.vuejs.org/) - Frontend framework used to build the app (using the Options API)
+- [Vite v3](https://vitejs.dev/) - Build tool used to bundle the app
+- [Pinia v2](https://pinia.esm.dev/) - State management library
+- [vue-cookies v1.8](https://www.npmjs.com/package/vue-cookies) - Cookie management library
 
