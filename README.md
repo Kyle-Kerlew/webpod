@@ -13,3 +13,4 @@ This project is live at https://webpod.kylekerlew.com. The subdomain is hosted o
 - [Pinia v2](https://pinia.esm.dev/) - State management library
 - [vue-cookies v1.8](https://www.npmjs.com/package/vue-cookies) - Cookie management library
 
+- [express v4](https://expressjs.com/) - Backend framework used to handle requests for Spotify OAuth
